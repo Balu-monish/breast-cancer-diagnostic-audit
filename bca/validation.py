@@ -4,8 +4,8 @@ The test set is touched exactly once, in ``bca.metrics.evaluate``. That is
 enforced structurally here, not just by convention: ``tune`` does not accept
 ``X_test``/``y_test`` parameters at all, so there is no code path by which
 hyperparameter or PCA-component selection could see held-out data (this is
-exactly the kind of leakage that let a prior notebook pick its "best" PCA
-component count by maximizing test-set accuracy directly).
+exactly the kind of leakage that could otherwise let a "best" PCA component
+count get chosen by maximizing test-set accuracy directly).
 """
 
 import inspect
@@ -44,5 +44,5 @@ def tune(model_name: str, X_train, y_train, cv_folds: int = 5) -> GridSearchCV:
 _TEST_DATA_PARAM_NAMES = {"x_test", "y_test", "test_x", "test_y"}
 assert not _TEST_DATA_PARAM_NAMES & set(inspect.signature(tune).parameters), (
     "tune() must never accept test-data parameters — this is the structural "
-    "guard against the PCA-selection leakage found in the original notebook."
+    "guard against test-set-peeking leakage during PCA/hyperparameter selection."
 )

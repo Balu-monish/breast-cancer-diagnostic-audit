@@ -1,32 +1,34 @@
 # Breast Cancer Diagnostic Audit
 
-A leakage-free, clinically-labeled breast cancer classifier — built after auditing
-a prior coursework notebook that had a real, dangerous bug: **it silently
-swapped the meaning of "benign" and "malignant" in every plot, metric, and
-report**, which meant its central clinical claim ("this model has better
-recall, i.e. it's better at catching cancer") was actually describing
-sensitivity to *benign* cases, not malignant ones.
+A leakage-free, clinically-labeled breast cancer classifier, built to
+demonstrate (and guard against) a subtle but dangerous class of ML bug:
+silently swapping which class counts as "positive" in a diagnostic metric.
+Get that wrong and a model's central clinical claim — "this model has better
+recall, i.e. it's better at catching cancer" — can end up describing
+sensitivity to the *wrong* class entirely, while every test still passes and
+every number still looks plausible.
 
-## The bug I found
+## The bug this project guards against
 
 `sklearn.datasets.load_breast_cancer()` encodes `target_names[0] == "malignant"`
 (212 samples) and `target_names[1] == "benign"` (357 samples) — raw label `0`
 means malignant. `sklearn`'s metric functions (`recall_score`, `precision_score`)
-default to `pos_label=1`. The original notebook used the raw labels directly
-while describing `target == 1` as malignant in its plots and PDF report —
-backwards from the actual encoding.
+default to `pos_label=1`. It's an easy mistake to make: use the raw labels
+directly while assuming `target == 1` means malignant — backwards from the
+actual encoding — and nothing about the code will error out. Every metric
+still computes, every plot still renders; it just silently measures the wrong
+class.
 
 `notebooks/exploration.ipynb` reproduces this in miniature (Part 1): the same
 model, the same predictions, scored two ways —
 
-| | "Recall" as the buggy notebook computed it (actually benign) | Actual malignant recall (sensitivity) |
+| | "Recall" computed naively (`pos_label=1`, actually benign) | Actual malignant recall (sensitivity) |
 |---|---|---|
 | Score | 0.981 | 0.938 |
 
-A 4.4-point gap between the number that was reported and the number that
-actually matters for a cancer-screening task. In a domain where a false
-negative means a missed cancer diagnosis, reporting the wrong class's recall
-isn't a rounding error.
+A 4.4-point gap between the naive number and the one that actually matters for
+a cancer-screening task. In a domain where a false negative means a missed
+cancer diagnosis, reporting the wrong class's recall isn't a rounding error.
 
 ## Why this matters clinically
 
@@ -37,20 +39,20 @@ don't capture that asymmetry — a model needs to be evaluated, and its decision
 threshold chosen, with that cost imbalance in mind. See "Cost-sensitive
 threshold tuning" below.
 
-## What this project does differently
+## Engineering choices
 
 - **Label contract fixed at the source.** `bca/data.py` remaps labels once so
   `y == 1` always means malignant — the universal "positive = has the
   condition" clinical convention — instead of relying on remembering to pass
   `pos_label=0` correctly at every call site. `tests/test_data.py` pins this
-  down with the exact assertions that would have caught the original swap.
-- **Leakage-free model selection.** The original notebook chose its "best" PCA
-  component count by directly maximizing test-set accuracy. Here,
-  `bca.validation.tune()` selects both PCA component count and model
-  hyperparameters via 5-fold stratified cross-validation on the training set
-  only — its function signature has no `X_test`/`y_test` parameters at all, so
-  that kind of leakage is structurally impossible, not just avoided by
-  discipline. The test set is touched exactly once, in
+  down with the exact assertions that would catch this exact class of bug.
+- **Leakage-free model selection.** A naive approach might pick its "best"
+  PCA component count by directly maximizing test-set accuracy — that's
+  leakage. Here, `bca.validation.tune()` selects both PCA component count and
+  model hyperparameters via 5-fold stratified cross-validation on the
+  training set only — its function signature has no `X_test`/`y_test`
+  parameters at all, so that kind of leakage is structurally impossible, not
+  just avoided by discipline. The test set is touched exactly once, in
   `bca.metrics.evaluate()`.
 - **Cost-sensitive threshold tuning.** Rather than the default 0.5 cutoff,
   `bca.metrics.tune_threshold()` picks the threshold that maximizes

@@ -1,6 +1,6 @@
-"""These are the exact checks that would have caught the original notebook's
-benign/malignant label swap: it stated 357 malignant / 212 benign, backwards
-from sklearn's real 212 malignant / 357 benign encoding."""
+"""These are the exact checks that would catch a benign/malignant label
+swap: sklearn's real encoding is 212 malignant / 357 benign, and it's easy
+to get that backwards without anything erroring out."""
 
 from sklearn.datasets import load_breast_cancer
 
