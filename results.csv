@@ -1,0 +1,7 @@
+model,threshold_mode,threshold,accuracy,sensitivity,specificity,ppv,npv,roc_auc,pr_auc
+logistic_regression,default (0.5),0.5,0.9884,0.9688,1.0,1.0,0.9818,1.0,1.0
+logistic_regression,cost-sensitive (tuned),0.2126,0.9884,1.0,0.9815,0.9697,1.0,1.0,1.0
+random_forest,default (0.5),0.5,0.9651,0.9375,0.9815,0.9677,0.9636,0.9971,0.9953
+random_forest,cost-sensitive (tuned),0.3933,0.9535,0.9375,0.963,0.9375,0.963,0.9971,0.9953
+mlp,default (0.5),0.5,0.9884,0.9688,1.0,1.0,0.9818,1.0,1.0
+mlp,cost-sensitive (tuned),0.4399,0.9651,1.0,0.9444,0.9143,1.0,1.0,1.0

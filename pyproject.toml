@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bca-diagnostics"
+version = "0.1.0"
+description = "A leakage-free, clinically-correct breast cancer diagnostic classifier — audits and fixes a common ML metric-attribution bug (recall computed against the wrong class)."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "pandas",
+    "scikit-learn",
+    "matplotlib",
+    "seaborn",
+    "shap",
+    "streamlit",
+]
+
+[tool.setuptools.packages.find]
+include = ["bca*"]
